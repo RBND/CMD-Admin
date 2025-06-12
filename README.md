@@ -1,7 +1,9 @@
 
 # 🛠️ CMDA Launcher
 
-This project provides a simple way to launch a **Command Prompt window with administrator privileges** from any File Explorer address bar using a custom keyword (`cmda`), with the terminal starting in the current directory—just like typing `cmd`, but as admin.
+This project provides a simple way to launch a **Command Prompt window with administrator privileges** from any File Explorer address bar using a custom keyword (`cmda`), with the terminal starting in the current directory.  
+
+Just like typing `cmd`, but as admin.
 
 ---
 
@@ -16,8 +18,16 @@ C:\CMD-Admin
 ### 2. 📝 Set Up an Environment Variable
 Create a new **User Environment Variable**:
 
-- **Variable name:** `cmda`
-- **Variable value:** `C:\CMD-Admin\cmda.bat`
+To be able to launch the script using a keyword like `cmda` from any File Explorer address bar:
+
+1. Press `Windows + S` and search for **Environment Variables**.
+2. Click **Edit the system environment variables**.
+3. In the **System Properties** window, click the **Environment Variables** button.
+4. Under **User variables**, click **New**.
+5. For **Variable name**, enter: `cmda`
+6. For **Variable value**, enter the full path to your script, for example: `C:\CMD-Admin\cmda.bat`
+7. Click **OK** to save.
+8. Click **OK** on all other open dialogs to close them.
 
 ### 3. ✅ Launch It!
 In any File Explorer window:
@@ -82,10 +92,6 @@ If automation fails, manually copy the Command Prompt GUID from `settings.json`.
 Then hardcode the GUID in your script.
 
 ---
-
-## 🙋 Support
-
-If the script opens and closes too fast to read errors, add a `pause` at the end of your `.bat` file:
 ```bat
 pause
 ```
