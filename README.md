@@ -23,9 +23,9 @@ To be able to launch the script using a keyword like `cmda` from any File Explor
 1. Press `Windows + S` and search for **Environment Variables**.
 2. Click **Edit the system environment variables**.
 3. In the **System Properties** window, click the **Environment Variables** button.
-4. Under **User variables**, click **New**.
-5. For **Variable name**, enter: `cmda`
-6. For **Variable value**, enter the full path to your script, for example: `C:\CMD-Admin\cmda.bat`
+4. Under **System variables**, find and click the entry **Path** to highlight it.
+5. Click **Edit**.
+6. Then click **New**, and enter the full path to your script folder, for example: `C:\CMD-Admin\`
 7. Click **OK** to save.
 8. Click **OK** on all other open dialogs to close them.
 
