@@ -12,7 +12,7 @@ Just like typing `cmd`, but as admin.
 ### 1. 📁 Create a Folder
 Save all files in a folder named:
 ```
-C:\CMD-Admin
+C:\Scripts
 ```
 
 ### 2. 📝 Set Up an Environment Variable
@@ -25,7 +25,7 @@ To be able to launch the script using a keyword like `cmda` from any File Explor
 3. In the **System Properties** window, click the **Environment Variables** button.
 4. Under **System variables**, find and click the entry **Path** to highlight it.
 5. Click **Edit**.
-6. Then click **New**, and enter the full path to your script folder, for example: `C:\CMD-Admin\`
+6. Then click **New**, and enter the full path to your script folder, for example: `C:\Scripts\`
 7. Click **OK** to save.
 8. Click **OK** on all other open dialogs to close them.
 
