@@ -1,99 +1,51 @@
+# 🛠️ Terminal Admin Launchers (CMDA / WTA / PSA)
 
-# 🛠️ CMDA Launcher
+A lightweight suite of quick commands to launch elevated (Administrator) terminal sessions directly from any Windows File Explorer address bar, opened to your active directory.
 
-This project provides a simple way to launch a **Command Prompt window with administrator privileges** from any File Explorer address bar using a custom keyword (`cmda`), with the terminal starting in the current directory.  
-
-Just like typing `cmd`, but as admin.
+Just like typing `cmd`, `wt`, or `powershell` in File Explorer—but with administrator privileges!
 
 ---
 
-## 🚀 Installation Instructions
+## ⚡ Available Commands
 
-### 1. 📁 Create a Folder
-Save all files in a folder named:
-```
-C:\Scripts
-```
+| Command | Launches | Description |
+| :--- | :--- | :--- |
+| **`cmda`** | **Command Prompt (Admin)** | Launches elevated `cmd.exe` directly in the current directory. |
+| **`wta`** | **Windows Terminal (Admin)** | Launches elevated `wt.exe` directly in the current directory. |
+| **`psa`** | **PowerShell (Admin)** | Launches elevated `powershell.exe` directly in the current directory. |
 
-### 2. 📝 Set Up an Environment Variable
-Create a new **User Environment Variable**:
+---
 
-To be able to launch the script using a keyword like `cmda` from any File Explorer address bar:
+## 🚀 Installation
 
-1. Press `Windows + S` and search for **Environment Variables**.
+### 1. 📁 Save the Scripts
+Keep the scripts in a dedicated folder (e.g., your cloned repository folder or `C:\Scripts`).
+
+### 2. 📝 Add to PATH
+Add the folder containing the `.bat` files to your system or user `Path` environment variable:
+
+1. Press `Win + S` and search for **Environment Variables**.
 2. Click **Edit the system environment variables**.
-3. In the **System Properties** window, click the **Environment Variables** button.
-4. Under **System variables**, find and click the entry **Path** to highlight it.
-5. Click **Edit**.
-6. Then click **New**, and enter the full path to your script folder, for example: `C:\Scripts\`
-7. Click **OK** to save.
-8. Click **OK** on all other open dialogs to close them.
+3. In the **System Properties** dialog, click the **Environment Variables...** button.
+4. Under **User variables** (or **System variables**), select **Path** and click **Edit...**.
+5. Click **New**, enter the folder path where the scripts are located (e.g. `C:\Scripts` or your repository path), and click **OK**.
+6. Click **OK** on all open dialogs to save.
 
-### 3. ✅ Launch It!
+---
+
+## 💻 How to Use
+
 In any File Explorer window:
-- Click the address bar
-- Type `cmda` and press **Enter**
-- It will launch **Command Prompt as Admin**, pointed at the current directory
+1. Click the address bar (or press `Alt + D` or `Ctrl + L`).
+2. Type **`cmda`**, **`wta`**, or **`psa`** and press **Enter**.
+3. Accept the Windows UAC (Administrator) prompt.
+4. Your terminal window opens immediately in the active directory!
 
 ---
 
 ## ⚙️ How It Works
 
-- `cmda.bat` captures the current directory and launches **Windows Terminal** as admin, using the Command Prompt profile.
-- If the profile GUID is not hardcoded, it auto-detects it from your Windows Terminal `settings.json`.
-
----
-
-## 🧪 Troubleshooting
-
-### 🧩 Profile GUID Detection Issues
-
-If you're using PowerShell to **automatically detect the Command Prompt profile GUID** in `settings.json`, here’s how to troubleshoot common issues:
-
-#### ✅ Check PowerShell Version
-Ensure you are using **PowerShell 5.1 or higher**:
-```powershell
-$PSVersionTable.PSVersion
-```
-
-#### ✅ Use Correct Path to `settings.json`
-The file should be located at:
-```
-%LOCALAPPDATA%\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json
-```
-Run this to confirm:
-```powershell
-Test-Path "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-```
-
-#### ✅ Use Safe JSON Parsing (No `-Raw`)
-If `-Raw` causes issues in older PowerShell versions, use:
-```powershell
-$s = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-$j = Get-Content $s | Out-String | ConvertFrom-Json
-$p = $j.profiles.list | Where-Object { $_.name -eq 'Command Prompt' }
-$p.guid
-```
-
-#### ❌ Getting `DriveNotFound` or `$env` Not Recognized?
-Make sure **double quotes** are used around the whole `-Command` and **escaped properly** inside a batch script:
-```bat
-powershell -NoProfile -Command "$s=\"$env:LOCALAPPDATA\\Packages\\Microsoft.WindowsTerminal_8wekyb3d8bbwe\\LocalState\\settings.json\"; $j=Get-Content $s | Out-String | ConvertFrom-Json; $p=$j.profiles.list | Where-Object { $_.name -eq 'Command Prompt' }; $p.guid"
-```
-
-#### 📋 Manually Find the GUID
-If automation fails, manually copy the Command Prompt GUID from `settings.json`. Look for:
-```json
-{
-  "name": "Command Prompt",
-  "guid": "{...}"
-}
-```
-Then hardcode the GUID in your script.
-
----
-```bat
-pause
-```
-
-This will keep the terminal open until you press a key.
+- **Proper UAC Directory Preservation:** By default, Windows resets the working directory of elevated processes to `C:\Windows\System32`. Each script captures the active directory and instructs the elevated shell to open or change to that exact path.
+- **Robust Path Quoting:** Safely handles spaces, ampersands (`&`), parentheses (`()`), single quotes, and drive roots (`C:\`).
+- **Virtual Folder Fallback:** If launched from a virtual Windows namespace (such as "Home" or "This PC" where no physical folder exists), the scripts gracefully default to your user profile folder (`%USERPROFILE%`) rather than dumping you into `System32`.
+- **Flicker-Free Launch:** Scripts execute their elevation trigger silently in the background (`-WindowStyle Hidden`), avoiding unnecessary intermediate window flashes.
