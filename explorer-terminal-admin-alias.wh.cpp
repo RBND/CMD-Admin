@@ -2,7 +2,7 @@
 // @id              explorer-terminal-admin-alias
 // @name            File Explorer Terminal Admin Aliases
 // @description     Launch elevated or custom terminals (cmd, Windows Terminal, PowerShell) directly from the File Explorer address bar with configurable aliases.
-// @version         1.0.0
+// @version         1.0.1
 // @author          RobotsNeverDie
 // @github          https://github.com/RBND/CMD-Admin
 // @include         explorer.exe
@@ -43,71 +43,81 @@ Open the mod's **Settings** tab in Windhawk to:
 // ==WindhawkModSettings==
 /*
 - cmd_alias: "cmda"
-  $name: Command Prompt (Admin) Alias
+  $name: "Command Prompt (Admin) Alias"
   $description: >-
     Address bar alias to launch an elevated Command Prompt in the active directory. Leave empty to disable.
 - cmd_elevated: true
-  $name: Run Command Prompt Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Run Command Prompt Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 
 - wt_alias: "wta"
-  $name: Windows Terminal (Admin) Alias
+  $name: "Windows Terminal (Admin) Alias"
   $description: >-
     Address bar alias to launch an elevated Windows Terminal in the active directory. Leave empty to disable.
 - wt_elevated: true
-  $name: Run Windows Terminal Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Run Windows Terminal Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 - wt_profile: ""
-  $name: Windows Terminal Profile (Optional)
+  $name: "Windows Terminal Profile (Optional)"
   $description: >-
     Optional profile name to launch (e.g. "Command Prompt", "Windows PowerShell", "Ubuntu"). Leave empty for default profile.
 - wt_fallback_cmd: true
-  $name: Fallback to CMD if WT is unavailable
-  $description: If wt.exe is not installed on the system, fallback to launching Command Prompt.
+  $name: "Fallback to CMD if WT is unavailable"
+  $description: >-
+    If wt.exe is not installed on the system, fallback to launching Command Prompt.
 
 - ps_alias: "psa"
-  $name: PowerShell (Admin) Alias
+  $name: "PowerShell (Admin) Alias"
   $description: >-
     Address bar alias to launch an elevated Windows PowerShell (5.1) prompt in the active directory. Leave empty to disable.
 - ps_elevated: true
-  $name: Run PowerShell Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Run PowerShell Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 
 - pwsh_alias: "pwsha"
-  $name: PowerShell 7+ (pwsh) Alias
+  $name: "PowerShell 7+ (pwsh) Alias"
   $description: >-
     Address bar alias to launch an elevated PowerShell Core (pwsh.exe) prompt. Leave empty to disable.
 - pwsh_elevated: true
-  $name: Run PowerShell 7+ Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Run PowerShell 7+ Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 
 - gitbash_alias: ""
-  $name: Git Bash Alias (Optional)
+  $name: "Git Bash Alias (Optional)"
   $description: >-
     Address bar alias to launch Git Bash in the active directory (e.g. "basha"). Leave empty to disable.
 - gitbash_elevated: true
-  $name: Run Git Bash Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Run Git Bash Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 - gitbash_path: ""
-  $name: Git Bash Executable Path (Optional)
+  $name: "Git Bash Executable Path (Optional)"
   $description: >-
     Path to git-bash.exe. Leave empty to auto-detect from Program Files.
 
 - custom1_alias: ""
-  $name: Custom Alias 1: Name
-  $description: Custom alias trigger name (e.g. "codea"). Leave empty to disable.
+  $name: "Custom Alias 1 - Name"
+  $description: >-
+    Custom alias trigger name (e.g. "codea"). Leave empty to disable.
 - custom1_target: ""
-  $name: Custom Alias 1: Target Executable
-  $description: Executable name or full path (e.g. "code.cmd").
+  $name: "Custom Alias 1 - Target Executable"
+  $description: >-
+    Executable name or full path (e.g. "code.cmd").
 - custom1_args: "%DIR%"
-  $name: Custom Alias 1: Arguments
-  $description: Arguments passed to the target. "%DIR%" will be replaced by the active directory path.
+  $name: "Custom Alias 1 - Arguments"
+  $description: >-
+    Arguments passed to the target. "%DIR%" will be replaced by the active directory path.
 - custom1_elevated: false
-  $name: Custom Alias 1: Run Elevated
-  $description: Launch as Administrator (UAC prompt).
+  $name: "Custom Alias 1 - Run Elevated"
+  $description: >-
+    Launch as Administrator (UAC prompt).
 
 - fallback_path: "%USERPROFILE%"
-  $name: Fallback Directory
+  $name: "Fallback Directory"
   $description: >-
     Directory used when typing an alias inside virtual folders (e.g. "This PC", "Quick Access", or "Home").
 */
