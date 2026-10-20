@@ -57,6 +57,8 @@ If you prefer a portable solution without third-party utilities, you can use the
    - Click **Environment Variables...** $\rightarrow$ Select `Path` $\rightarrow$ Click **Edit...** $\rightarrow$ Click **New** $\rightarrow$ Enter the folder path.
 3. Now type `cmda`, `wta`, or `psa` in File Explorer.
 
+To uninstall/remove the scripts from your PATH later, simply run [`uninstall-path.bat`](uninstall-path.bat).
+
 ---
 
 ## 💻 How to Use
