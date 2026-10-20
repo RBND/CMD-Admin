@@ -2,7 +2,7 @@
 // @id              explorer-terminal-admin-alias
 // @name            File Explorer Terminal Admin Aliases
 // @description     Launch elevated or custom terminals (cmd, Windows Terminal, PowerShell) directly from the File Explorer address bar with configurable aliases.
-// @version         1.0.2
+// @version         1.0.3
 // @author          RobotsNeverDie
 // @github          https://github.com/RBND/CMD-Admin
 // @include         explorer.exe
@@ -237,6 +237,66 @@ static std::wstring NormalizeDir(const std::wstring& dir) {
     return result;
 }
 
+// Helper: URL decoding (%20 -> space, + -> space)
+static std::wstring UrlDecode(const std::wstring& in) {
+    std::wstring out;
+    out.reserve(in.length());
+    for (size_t i = 0; i < in.length(); i++) {
+        if (in[i] == L'%' && i + 2 < in.length()) {
+            WCHAR hex[3] = { in[i+1], in[i+2], L'\0' };
+            WCHAR* end = nullptr;
+            long val = wcstol(hex, &end, 16);
+            if (end && *end == L'\0' && val > 0) {
+                out += (WCHAR)val;
+                i += 2;
+                continue;
+            }
+        } else if (in[i] == L'+') {
+            out += L' ';
+            continue;
+        }
+        out += in[i];
+    }
+    return out;
+}
+
+// Clean raw input from Explorer address bar or browser redirection URL
+static std::wstring CleanAliasInput(const std::wstring& raw) {
+    std::wstring s = Trim(raw);
+    if (s.empty()) return L"";
+
+    // 1. Strip "microsoft-edge:" prefix if present
+    if (s.rfind(L"microsoft-edge:", 0) == 0) {
+        s = s.substr(15);
+    }
+
+    // 2. If it's a search URL (e.g. Bing / Google search: ?q=... or &q=...)
+    size_t qPos = s.find(L"?q=");
+    if (qPos == std::wstring::npos) qPos = s.find(L"&q=");
+    if (qPos != std::wstring::npos) {
+        s = s.substr(qPos + 3);
+        size_t ampPos = s.find(L'&');
+        if (ampPos != std::wstring::npos) {
+            s = s.substr(0, ampPos);
+        }
+    }
+
+    // 3. Decode URL characters (%20, +, etc.)
+    s = UrlDecode(s);
+
+    // 4. Strip http://, https://, file:/// prefixes
+    if (s.rfind(L"http://", 0) == 0) s = s.substr(7);
+    else if (s.rfind(L"https://", 0) == 0) s = s.substr(8);
+    else if (s.rfind(L"file:///", 0) == 0) s = s.substr(8);
+
+    // 5. Strip trailing slashes
+    while (!s.empty() && (s.back() == L'/' || s.back() == L'\\')) {
+        s.pop_back();
+    }
+
+    return Trim(s);
+}
+
 // Helper: Query active explorer directory from HWND via Shell COM
 static bool GetExplorerWindowFolder(HWND hwnd, std::wstring& outPath) {
     if (!hwnd) return false;
@@ -353,7 +413,8 @@ struct MatchedAlias {
 static bool MatchAlias(LPCWSTR lpFile, LPCWSTR lpParameters, MatchedAlias& outMatch) {
     if (!lpFile || lpFile[0] == L'\0') return false;
 
-    std::wstring fullCommand = Trim(lpFile);
+    // Clean URL prefixes, search queries, etc.
+    std::wstring fullCommand = CleanAliasInput(lpFile);
     if (fullCommand.empty()) return false;
 
     // Separate primary alias token and potential inline arguments
@@ -475,6 +536,12 @@ ShellExecuteExW_t ShellExecuteExW_Original = nullptr;
 using ShellExecuteW_t = decltype(&ShellExecuteW);
 ShellExecuteW_t ShellExecuteW_Original = nullptr;
 
+using SearchPathW_t = decltype(&SearchPathW);
+SearchPathW_t SearchPathW_Original = nullptr;
+
+using PathFindOnPathW_t = decltype(&PathFindOnPathW);
+PathFindOnPathW_t PathFindOnPathW_Original = nullptr;
+
 // Core execution handler
 static bool HandleExecution(HWND hwnd, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory) {
     MatchedAlias match;
@@ -484,7 +551,7 @@ static bool HandleExecution(HWND hwnd, LPCWSTR lpFile, LPCWSTR lpParameters, LPC
 
     std::wstring rawTargetDir = ResolveTargetDirectory(hwnd, lpDirectory);
     std::wstring targetDir = NormalizeDir(rawTargetDir);
-    Wh_Log(L"Intercepted alias: file='%s' dir='%s'", lpFile ? lpFile : L"", targetDir.c_str());
+    Wh_Log(L"Intercepted alias: raw='%s' dir='%s'", lpFile ? lpFile : L"", targetDir.c_str());
 
     std::wstring executable;
     std::wstring arguments;
@@ -618,6 +685,57 @@ static bool HandleExecution(HWND hwnd, LPCWSTR lpFile, LPCWSTR lpParameters, LPC
     return true;
 }
 
+// Hook SearchPathW so Explorer considers the alias a valid command instead of treating it as a URL
+DWORD WINAPI SearchPathW_Hook(
+    LPCWSTR lpPath,
+    LPCWSTR lpFileName,
+    LPCWSTR lpExtension,
+    DWORD nBufferLength,
+    LPWSTR lpBuffer,
+    LPWSTR* lpFilePart
+) {
+    if (g_inHook || !lpFileName || lpFileName[0] == L'\0') {
+        return SearchPathW_Original(lpPath, lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart);
+    }
+
+    MatchedAlias match;
+    if (MatchAlias(lpFileName, nullptr, match)) {
+        Wh_Log(L"SearchPathW intercepted alias: %s", lpFileName);
+        WCHAR sysDir[MAX_PATH];
+        GetSystemDirectoryW(sysDir, ARRAYSIZE(sysDir));
+        WCHAR dummyPath[MAX_PATH];
+        PathCombineW(dummyPath, sysDir, L"cmd.exe");
+        DWORD len = (DWORD)wcslen(dummyPath);
+        if (lpBuffer && nBufferLength > len) {
+            wcscpy_s(lpBuffer, nBufferLength, dummyPath);
+            if (lpFilePart) {
+                *lpFilePart = wcsrchr(lpBuffer, L'\\') ? wcsrchr(lpBuffer, L'\\') + 1 : lpBuffer;
+            }
+        }
+        return len;
+    }
+
+    return SearchPathW_Original(lpPath, lpFileName, lpExtension, nBufferLength, lpBuffer, lpFilePart);
+}
+
+// Hook PathFindOnPathW for shlwapi resolution
+BOOL WINAPI PathFindOnPathW_Hook(LPWSTR pszPath, PZPCWSTR ppszOtherDirs) {
+    if (g_inHook || !pszPath || pszPath[0] == L'\0') {
+        return PathFindOnPathW_Original(pszPath, ppszOtherDirs);
+    }
+
+    MatchedAlias match;
+    if (MatchAlias(pszPath, nullptr, match)) {
+        Wh_Log(L"PathFindOnPathW intercepted alias: %s", pszPath);
+        WCHAR sysDir[MAX_PATH];
+        GetSystemDirectoryW(sysDir, ARRAYSIZE(sysDir));
+        PathCombineW(pszPath, sysDir, L"cmd.exe");
+        return TRUE;
+    }
+
+    return PathFindOnPathW_Original(pszPath, ppszOtherDirs);
+}
+
 // Hook for ShellExecuteExW
 BOOL WINAPI ShellExecuteExW_Hook(SHELLEXECUTEINFOW* pExecInfo) {
     if (g_inHook || !pExecInfo) {
@@ -649,11 +767,28 @@ BOOL Wh_ModInit() {
     Wh_Log(L"Terminal Admin Aliases mod init");
     LoadSettings();
 
-    HMODULE hShell32 = GetModuleHandle(L"shell32.dll");
-    if (!hShell32) {
-        hShell32 = LoadLibrary(L"shell32.dll");
+    // Hook SearchPathW
+    HMODULE hKernel32 = GetModuleHandle(L"kernel32.dll");
+    if (hKernel32) {
+        void* pSearchPathW = (void*)GetProcAddress(hKernel32, "SearchPathW");
+        if (pSearchPathW) {
+            Wh_SetFunctionHook(pSearchPathW, (void*)SearchPathW_Hook, (void**)&SearchPathW_Original);
+        }
     }
 
+    // Hook PathFindOnPathW
+    HMODULE hShlwapi = GetModuleHandle(L"shlwapi.dll");
+    if (!hShlwapi) hShlwapi = LoadLibrary(L"shlwapi.dll");
+    if (hShlwapi) {
+        void* pPathFindOnPathW = (void*)GetProcAddress(hShlwapi, "PathFindOnPathW");
+        if (pPathFindOnPathW) {
+            Wh_SetFunctionHook(pPathFindOnPathW, (void*)PathFindOnPathW_Hook, (void**)&PathFindOnPathW_Original);
+        }
+    }
+
+    // Hook ShellExecuteExW and ShellExecuteW
+    HMODULE hShell32 = GetModuleHandle(L"shell32.dll");
+    if (!hShell32) hShell32 = LoadLibrary(L"shell32.dll");
     if (hShell32) {
         void* pShellExecuteExW = (void*)GetProcAddress(hShell32, "ShellExecuteExW");
         if (pShellExecuteExW) {
